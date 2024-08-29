@@ -18,7 +18,9 @@ import javafx.stage.*;
  * The PolynomialDrawer.java.
  *
  * @author Subhajoy Laskar | https://in.linkedin.com/in/subhajoylaskar
- * @author <i>Source (modified from): </i> <b>Almas Baimagambetov (almaslvl@gmail.com); <a href=https://github.com/AlmasB>Almas B</a></b>
+ * @author <i>Source (modified from): </i> <b>Almas Baimagambetov
+ *         (almaslvl@gmail.com); <a href=https://github.com/AlmasB>Almas
+ *         B</a></b>
  * @version 1.0
  */
 public class PolynomialDrawer extends Application {
@@ -36,17 +38,17 @@ public class PolynomialDrawer extends Application {
     private static final double DURATION = 8.0;
 
     /** The functions. */
-    private List<FunctionData> functions = Arrays.asList(
-	    //new FunctionData(Color.RED, x -> x),
-	    //new FunctionData(Color.BLUE, x -> x * x),
-	    //new FunctionData(Color.GREEN, x -> x * x * x),
+    private static final List<FunctionData> functions = Arrays.asList(
+	    new FunctionData(Color.RED, x -> x),
+	    new FunctionData(Color.BLUE, x -> x * x),
+	    new FunctionData(Color.GREEN, x -> x * x * x),
 	    new FunctionData(Color.DARKBLUE, x -> Math.sin(x)),
 	    new FunctionData(Color.DARKGREEN, x -> Math.cos(x)),
-	    //new FunctionData(Color.LIGHTGRAY, x -> Math.cos(2*x)),
+	    new FunctionData(Color.LIGHTGRAY, x -> Math.cos(2 * x)),
 	    new FunctionData(Color.DARKGOLDENROD, x -> Math.tan(x)),
 	    new FunctionData(Color.DARKKHAKI, x -> Math.log(x)),
-	    new FunctionData(Color.BROWN, x -> Math.pow(Math.E, x))
-	    );
+	    new FunctionData(Color.BROWN, x -> Math.pow(Math.E, x)),
+	    new FunctionData(Color.DARKSEAGREEN, x -> Math.pow(1 / x, 2) + Math.pow(1 / (x + 1), 2)));
 
     /** The t. */
     private double t = 0.0;
@@ -76,29 +78,33 @@ public class PolynomialDrawer extends Application {
     private Parent createContent() {
 	Pane pane = new Pane();
 	pane.setPrefSize(W, H);
-
 	Canvas canvas = new Canvas(W, H);
 	graphicsContext = canvas.getGraphicsContext2D();
 	graphicsContext.setLineWidth(3.0);
+	animate();
+	pane.getChildren().add(canvas);
+	return pane;
+    }
 
-	AnimationTimer timer = new AnimationTimer() {
+    /**
+     * Animate.
+     */
+    private void animate() {
+	AnimationTimer animationTimer = new AnimationTimer() {
 	    @Override
 	    public void handle(long now) {
 		t += 0.016;
-
 		if (t >= DURATION) {
 		    sleep();
 		    t = 0.0;
 		}
-
+		if (t >= DURATION * 2) {
+		    stop();
+		}
 		onUpdate();
 	    }
 	};
-	timer.start();
-
-	pane.getChildren().add(canvas);
-
-	return pane;
+	animationTimer.start();
     }
 
     /**
@@ -108,7 +114,6 @@ public class PolynomialDrawer extends Application {
 	try {
 	    Thread.sleep(2000);
 	} catch (InterruptedException exception) {
-	    // TODO Auto-generated catch block
 	    exception.printStackTrace();
 	}
     }
@@ -119,29 +124,45 @@ public class PolynomialDrawer extends Application {
     private void onUpdate() {
 	graphicsContext.clearRect(0, 0, W, H);
 
-	functions.forEach(f -> {
+	functions.forEach(this::plot);
+    }
 
-	    graphicsContext.setStroke(f.color);
+    /**
+     * Plot.
+     *
+     * @param functionData the function data
+     */
+    private void plot(FunctionData functionData) {
+	graphicsContext.setStroke(functionData.color);
 
-	    int maxDrawX = (int) (W * t / DURATION);
+	int maxDrawX = (int) (W * t / DURATION);
 
-	    for (int drawX = 0; drawX < maxDrawX; drawX++) {
-		double x = (drawX - W / 2) / PIXELS_PER_UNIT;
-		double y = f.function.apply(x);
+	for (int drawX = 0; drawX < maxDrawX; drawX++) {
+	    draw(drawX, functionData);
+	}
 
-		double drawY = H - (y * PIXELS_PER_UNIT + H / 2);
+	functionData.oldX = 0.0;
+	functionData.oldY = 0.0;
+    }
 
-		if (!(f.oldX == 0.0 && f.oldY == 0.0)) {
-		    graphicsContext.strokeLine(f.oldX, f.oldY, drawX, drawY);
-		}
+    /**
+     * Draw.
+     *
+     * @param drawX        the draw X
+     * @param functionData the function data
+     */
+    private void draw(int drawX, FunctionData functionData) {
+	double x = (drawX - W / 2) / PIXELS_PER_UNIT;
+	double y = functionData.function.apply(x);
 
-		f.oldX = drawX;
-		f.oldY = drawY;
-	    }
+	double drawY = H - (y * PIXELS_PER_UNIT + H / 2);
 
-	    f.oldX = 0.0;
-	    f.oldY = 0.0;
-	});
+	if (!(functionData.oldX == 0.0 && functionData.oldY == 0.0)) {
+	    graphicsContext.strokeLine(functionData.oldX, functionData.oldY, drawX, drawY);
+	}
+
+	functionData.oldX = drawX;
+	functionData.oldY = drawY;
     }
 
     /**
@@ -167,7 +188,7 @@ public class PolynomialDrawer extends Application {
 	/**
 	 * Instantiates a new function data.
 	 *
-	 * @param color the color
+	 * @param color    the color
 	 * @param function the function
 	 */
 	public FunctionData(Color color, Function<Double, Double> function) {
