@@ -48,6 +48,7 @@ public class PolynomialDrawer extends Application {
 	    new FunctionData(Color.DARKGOLDENROD, x -> Math.tan(x)),
 	    new FunctionData(Color.DARKKHAKI, x -> Math.log(x)),
 	    new FunctionData(Color.BROWN, x -> Math.pow(Math.E, x)),
+	    new FunctionData(Color.LAVENDERBLUSH, x -> Math.pow(Math.E, x * x)),
 	    new FunctionData(Color.DARKSEAGREEN, x -> Math.pow(1 / x, 2) + Math.pow(1 / (x + 1), 2)));
 
     /** The t. */
@@ -94,12 +95,12 @@ public class PolynomialDrawer extends Application {
 	    @Override
 	    public void handle(long now) {
 		t += 0.016;
+		if (t >= DURATION * 2) {
+		    stop();
+		}
 		if (t >= DURATION) {
 		    sleep();
 		    t = 0.0;
-		}
-		if (t >= DURATION * 2) {
-		    stop();
 		}
 		onUpdate();
 	    }
@@ -134,6 +135,7 @@ public class PolynomialDrawer extends Application {
      */
     private void plot(FunctionData functionData) {
 	graphicsContext.setStroke(functionData.color);
+	graphicsContext.setLineWidth(15);
 
 	int maxDrawX = (int) (W * t / DURATION);
 
@@ -154,13 +156,10 @@ public class PolynomialDrawer extends Application {
     private void draw(int drawX, FunctionData functionData) {
 	double x = (drawX - W / 2) / PIXELS_PER_UNIT;
 	double y = functionData.function.apply(x);
-
 	double drawY = H - (y * PIXELS_PER_UNIT + H / 2);
-
-	if (!(functionData.oldX == 0.0 && functionData.oldY == 0.0)) {
+	if (functionData.oldX != 0.0 || functionData.oldY != 0.0) {
 	    graphicsContext.strokeLine(functionData.oldX, functionData.oldY, drawX, drawY);
 	}
-
 	functionData.oldX = drawX;
 	functionData.oldY = drawY;
     }
